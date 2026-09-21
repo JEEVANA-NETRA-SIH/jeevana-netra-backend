@@ -19,3 +19,7 @@ matlab_backend/*ServerArchive*/
 # OS files
 .DS_Store
 Thumbs.db
+# Required Jeevana Netra model files
+!matlab_backend/ResNet101_APTOS_Final_Trained.mat
+!matlab_backend/IDRiD_Lesion_Evidence_ResNet101.mat
+!matlab_backend/IDRiD_Lesion_Evidence_Thresholds.mat
