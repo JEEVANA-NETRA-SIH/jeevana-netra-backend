@@ -1,0 +1,21 @@
+# MATLAB generated files
+*.asv
+*.m~
+*.autosave
+
+# MATLAB large runtime/model artifacts
+matlab_backend/*.mat
+matlab_backend/*.ctf
+
+# MATLAB generated/build folders
+matlab_backend/*runtime*/
+matlab_backend/*DockerImage*/
+matlab_backend/*ServerArchive*/
+
+# Temporary/generated files
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
