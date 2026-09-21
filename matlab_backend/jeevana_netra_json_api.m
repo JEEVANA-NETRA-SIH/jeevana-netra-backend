@@ -38,7 +38,7 @@ if ~isfield(request,"operation")
     error("jneeJsonApi:MissingOperation","Request operation is required.");
 end
 
-if strcmpi(char(string(request.operation)),"screen") ~= 0
+if strcmpi(char(string(request.operation)),"screen") == 0
     error("jneeJsonApi:UnsupportedOperation", ...
         "Unsupported operation. Use screen.");
 end
