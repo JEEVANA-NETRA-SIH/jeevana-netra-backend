@@ -8,13 +8,17 @@ persistent netFinal
 
 if isempty(netFinal)
 
-    if isdeployed
-        % Model is packaged inside the deployed Docker archive
-        modelFile = which("ResNet101_APTOS_Final_Trained.mat");
-    else
-        % Normal Windows MATLAB development path
-        modelFile = ...
-            "C:\Users\fujitsu\ResNet101_APTOS_Final_Trained.mat";
+    % Portable model resolution.
+    % 1) which() finds the model when the training/data files are on the
+    %    MATLAB path or packaged inside the deployed archive (CTF).
+    % 2) Fallback: resolve relative to this function's own file location,
+    %    so development works from any checkout with no absolute path.
+    modelFile = which("ResNet101_APTOS_Final_Trained.mat");
+
+    if isempty(modelFile)
+        modelFile = fullfile( ...
+            fileparts(mfilename("fullpath")), ...
+            "ResNet101_APTOS_Final_Trained.mat");
     end
 
     if isempty(modelFile) || ~isfile(modelFile)

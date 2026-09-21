@@ -19,10 +19,22 @@ modelFile = which('IDRiD_Lesion_Evidence_ResNet101.mat');
 thresholdFile = which('IDRiD_Lesion_Evidence_Thresholds.mat');
 
 if isempty(modelFile)
-    error('IDRiD_Lesion_Evidence_ResNet101.mat could not be found.');
+    modelFile = fullfile( ...
+        fileparts(mfilename('fullpath')), ...
+        'IDRiD_Lesion_Evidence_ResNet101.mat');
 end
 
 if isempty(thresholdFile)
+    thresholdFile = fullfile( ...
+        fileparts(mfilename('fullpath')), ...
+        'IDRiD_Lesion_Evidence_Thresholds.mat');
+end
+
+if isempty(modelFile) || ~isfile(modelFile)
+    error('IDRiD_Lesion_Evidence_ResNet101.mat could not be found.');
+end
+
+if isempty(thresholdFile) || ~isfile(thresholdFile)
     error('IDRiD_Lesion_Evidence_Thresholds.mat could not be found.');
 end
 

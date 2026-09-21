@@ -1,11 +1,15 @@
 %% Jeevana Netra - Backend API Function
 
-function response = jeevana_netra_api(imageData)
+function response = jeevana_netra_api(imageData, includeEvidence)
 
 %% 1. Validate input
 
 if nargin < 1 || isempty(imageData)
     error("Image data is required.");
+end
+
+if nargin < 2 || isempty(includeEvidence)
+    includeEvidence = true;
 end
 
 if ~isa(imageData,"uint8")
@@ -96,9 +100,9 @@ try
         'topScore',0, ...
         'regions',struct([])),0,1);
 
-    %% 8. Run lesion evidence only for usable images
+%% 8. Run lesion evidence only for usable images
 
-    if strcmpi(string(result.qualityStatus),"Good")
+if includeEvidence && strcmpi(string(result.qualityStatus),"Good")
 
         fprintf('\nRunning lesion evidence extraction...\n');
 

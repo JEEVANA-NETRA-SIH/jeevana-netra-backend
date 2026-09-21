@@ -1,0 +1,24 @@
+# Git
+.git
+**/.git/**
+**/.gitattributes
+**/.gitignore
+**/.gitmodules
+
+# Python
+bridge/.venv
+bridge/**/__pycache__
+bridge/**/*.py[cod]
+bridge/.pytest_cache
+bridge/data
+
+# Models are bundled inside the compiled MATLAB archive (mcc -a).
+# Excluding them keeps the Docker build context small (~318 MB less).
+# Only remove these lines if the container must load the models standalone.
+matlab_backend/*.mat
+
+# Local logs / temp
+**/*.log
+**/*.tmp
+**/.DS_Store
+Thumbs.db

@@ -23,3 +23,13 @@ Thumbs.db
 !matlab_backend/ResNet101_APTOS_Final_Trained.mat
 !matlab_backend/IDRiD_Lesion_Evidence_ResNet101.mat
 !matlab_backend/IDRiD_Lesion_Evidence_Thresholds.mat
+
+# Python bridge (FastAPI)
+bridge/.venv/
+bridge/**/__pycache__/
+bridge/.pytest_cache/
+bridge/data/
+bridge/.env
+
+# Compiled MATLAB service output (generated on a MATLAB machine)
+matlab_service/
