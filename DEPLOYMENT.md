@@ -50,13 +50,28 @@ Python. Development default (`none`) returns HTTP 503.
 
 ---
 
-## Step 1 — Build the compiled MATLAB component (REQUIRED, on a MATLAB machine)
+## Step 1 — Build the Linux-compiled MATLAB component (REQUIRED, on LINUX)
 
-Requires a MATLAB license with:
+Requires a **Linux** MATLAB install (R2026a) with a working license for:
 
 - MATLAB Compiler
 - Deep Learning Toolbox
 - Image Processing Toolbox
+
+> **Why Linux?** MATLAB Compiler does **not** cross-compile. `mcc` only
+> produces binaries for the OS it runs on. The container used for Render runs
+> Linux, so a **Linux `mcc -m` build** is mandatory. The Windows dev build
+> (`jeevana_netra_service.exe`) on this repo's development machine runs only
+> with the Windows MATLAB Runtime — it must **never** be placed in
+> `matlab_service/` for the Linux container.
+>
+> Licensing the Linux MATLAB: license **40849457** is a named-user **online**
+> license. It activates on a Linux machine with a one-time sign-in (the same
+> MathWorks account used on Windows). After activation, `mcc` runs headless.
+> In a MathWorks container (`mathworks/matlab:r2026a`) online licensing
+> requires an interactive sign-in; alternatives there are a Network License
+> Manager (`MLM_LICENSE_FILE=27000@host`) or a MATLAB Batch licensing token
+> (`MLM_LICENSE_TOKEN`).
 
 **The compilation MATLAB release must be at least as new as the release that
 saved the networks** (`.mat` headers show creation `Sun Sep 13 2026` /
@@ -79,10 +94,18 @@ mcc -m run_jeevana_service.m \
     -o jeevana_netra_service
 ```
 
-This produces `jeevana_netra_service/` with `run_jeevana_service.sh`
-(launcher) plus binary and CTF. **Copy the whole folder into the repository
-root as `matlab_service/`** (it is git-ignored, so it must be produced by the
-build/CI pipeline or copied manually before `docker build`).
+On Linux this produces `jeevana_netra_service/` containing the compiled
+**binary `jeevana_netra_service`** (CTF/model archive embedded), `readme.txt`,
+`run_jeevana_service.sh` (launcher), logging files, and `buildresult.json`.
+**Copy the whole folder into the repository root as `matlab_service/`** (it is
+git-ignored, so it must be produced by the build/CI pipeline or copied
+manually before `docker build`).
+
+> The container invokes the **binary directly** (`/app/matlab_service/
+> jeevana_netra_service`), not `run_jeevana_service.sh`: the launcher bakes in
+> the compile-machine's full MATLAB install path, which does not exist inside
+> the Runtime container. The Runtime container provides the MCR via
+> `LD_LIBRARY_PATH` (set in the Dockerfile).
 
 For SDK mode instead: use MATLAB Compiler → **Library Compiler** →
 **Python Package** exporting `jeevana_netra_json_api` and
@@ -118,21 +141,79 @@ uvicorn app.main:app --reload --port 8000
 ## Step 3 — Docker build
 
 ```bash
-# Populate ./matlab_service with the mcc output first (Step 1).
+# Populate ./matlab_service with the LINUX mcc output first (Step 1).
 docker build \
-  --build-arg MATLAB_RUNTIME_IMAGE=mathworks/matlab-runtime:R2025b \
+  --build-arg MATLAB_RUNTIME_IMAGE=containers.mathworks.com/matlab-runtime:r2026a \
   --build-arg MATLAB_SERVICE_DIR=./matlab_service \
   -t jeevana-netra-backend .
 
 docker run --env-file bridge/.env.example -p 8000:8000 jeevana-netra-backend
 ```
 
-**About `MATLAB_RUNTIME_IMAGE`:** MathWorks publishes MATLAB Runtime images
-on Docker Hub (`mathworks/matlab-runtime`). Your `mcc -m` build emits a
-`LDF`/launcher tied to the Runtime of the exact release used to compile —
-**choose the tag matching your build-machine MATLAB release** (do not guess
-R2020b/R2021a/R2022b; the Sep-2026 networks need a current runtime). Verify
-the exact tag on the MathWorks Docker Hub page for your release.
+**About `MATLAB_RUNTIME_IMAGE`:** MathWorks publishes official MATLAB Runtime
+containers at the **public, no-auth registry `containers.mathworks.com`**, tag
+`matlab-runtime:r2026a` (Ubuntu-based; `r2026a-full` adds GPU libs). Choose the
+tag matching the Linux build-machine release. The image already sets the MCR
+`LD_LIBRARY_PATH` and requires `AGREE_TO_MATLAB_RUNTIME_LICENSE=yes` — both
+are already baked into the `Dockerfile`.
+
+**`compiler.runtime.createDockerImage`:** an official MathWorks builder
+(R2023b+) that creates a *custom* MATLAB Runtime image from the build's
+`buildresult.json` (R2025a+; `requiredMCRProducts.txt` before that). It is
+only needed when you want a custom base layer or an fully offline/air-gapped
+build, and it requires Docker running on the build machine. For Render (public
+internet on the builder) the prebuilt official
+`containers.mathworks.com/matlab-runtime:r2026a` image is the simpler,
+supported choice — custom-image construction is optional.
+
+---
+
+## Local Docker acceptance test (REQUIRED before Render)
+
+Run the whole checklist inside the locally-built Linux container. **Do not
+deploy to Render until every step passes with the real MATLAB model.**
+
+```bash
+# 1. Build the image (assumes ./matlab_service has the LINUX mcc output)
+docker build \
+  --build-arg MATLAB_RUNTIME_IMAGE=containers.mathworks.com/matlab-runtime:r2026a \
+  --build-arg MATLAB_SERVICE_DIR=./matlab_service \
+  -t jeevana-netra-backend .
+
+# 2. Start the container
+docker run -d --name jin -p 8000:8000 \
+  -e PORT=8000 \
+  -e MATLAB_DEPLOY_MODE=cli \
+  -e JEEVANA_NETRA_EXE=/app/matlab_service/jeevana_netra_service \
+  -e JEEVANA_NETRA_DB=/app/data/jeevana_netra.db \
+  -e MATLAB_PREFDIR=/app/matlab_prefdir \
+  jeevana-netra-backend
+
+# 3. Health
+curl -s http://localhost:8000/health
+#    expect: {"status":"ok", ... "matlab":{"status":"configured"|"initialized","mode":"cli"}}
+
+# 4. Real screening with a real retinal image
+curl -s -F "image=@real_retina.png" http://localhost:8000/api/screen
+#    expect HTTP 200 + predictedClass/confidence/lesionEvidence from the REAL model
+#    (first call takes tens of seconds — MCR + model init)
+
+# 5. Persist + history
+curl -s -X POST http://localhost:8000/api/screenings \
+  -H 'Content-Type: application/json' -d @screening_payload.json   # expect 201
+curl -s http://localhost:8000/api/screenings                        # lists the record
+
+# 6. Real PDF report
+curl -s -X POST http://localhost:8000/api/report \
+  -H 'Content-Type: application/json' -d @report_payload.json -o report.pdf
+file report.pdf   # expect: PDF document
+
+# 7. Container logs — MUST NOT show MATLAB Runtime / MCR errors
+docker logs jin | grep -i -E 'mcr|runtime|error|exception' || echo "no runtime errors"
+```
+
+If `MATLAB_RUNTIME_IMAGE` is left at the Dockerfile default (`r2026a`) the
+same image is what Render will build.
 
 ---
 
@@ -148,12 +229,15 @@ the exact tag on the MathWorks Docker Hub page for your release.
 | -------- | ----- |
 | `PORT` | Set by Render automatically (the app binds `0.0.0.0:$PORT`). |
 | `MATLAB_DEPLOY_MODE` | `cli` |
-| `JEEVANA_NETRA_EXE` | `/app/matlab_service/run_jeevana_service.sh` |
+| `JEEVANA_NETRA_EXE` | `/app/matlab_service/jeevana_netra_service` (the Linux binary) |
 | `JEEVANA_NETRA_DB` | `/app/data/jeevana_netra.db` |
 | `MATLAB_PREFDIR` | `/app/matlab_prefdir` (writable MCR cache dir; created by the image) |
 | `CORS_ORIGINS` | `https://jeevananetra.vercel.app` |
 | `JEEVANA_API_KEY` | _optional_ — set a shared key to protect all `/api/*` routes |
 | `MAX_UPLOAD_MB` | `20` (match the frontend's 20 MB cap) |
+
+`AGREE_TO_MATLAB_RUNTIME_LICENSE` and the MCR `LD_LIBRARY_PATH` are baked into
+the image — no Render env needed for the Runtime.
 
 No secret values are assumed; nothing is committed to the repository.
 
@@ -230,18 +314,17 @@ CORS allows `https://jeevananetra.vercel.app` (and localhost dev origins).
 
 ---
 
-## Remaining blockers (require a MATLAB build machine / licenses)
+## Remaining blockers (require a Linux MATLAB build host)
 
-1. **MATLAB Compiler license + installation** with Deep Learning Toolbox and
-   Image Processing Toolbox → run `mcc -m` (Step 1).
-2. **Exact MATLAB / Runtime release** confirmation — must match or exceed the
-   Sep 2026 model save release; verify `load()` of both networks on the build
-   machine.
-3. **Grad-CAM/`extractdata` under Runtime** — verify the compiled
-   `screen` job successfully runs the explainability path once under MCR.
-4. **`MATLAB_RUNTIME_IMAGE` Docker tag** — confirm the exact MathWorks image
-   tag for the chosen release.
+1. **Linux MATLAB R2026a + MATLAB Compiler install** with Deep Learning
+   Toolbox and Image Processing Toolbox, licensed from MathWorks account
+   **40849457** (one-time activation) → run `mcc -m` (Step 1) **on Linux**.
+2. **`matlab_service/` Linux artifact must exist before `docker build`**
+   (automate with a build/CI job on the Linux MATLAB host if desired).
+3. **Docker on the dev machine** to build/run the Linux container and run the
+   local acceptance checklist in Step 5 (health, real `/api/screen`,
+   `/api/screenings`, `/api/report` PDF, container logs).
+4. Verify `load()` of both networks and the Grad-CAM/`extractdata` path under
+   the R2026a Linux Runtime before touching Render.
 5. **Render plan/RAM** — validate with real images; upgrade from the observed
-   memory usage, not a guess.
-6. **`matlab_service/` build artifact** must exist before `docker build`
-   (automate with a build/CI job on the MATLAB machine if desired).
+   memory usage, not a guess (ResNet-101 + MCR needs ≥ 2 GB).
