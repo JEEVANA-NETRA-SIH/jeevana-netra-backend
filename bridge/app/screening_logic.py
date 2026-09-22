@@ -15,6 +15,8 @@ NON_REFERABLE_DR = "NON-REFERABLE DR"
 
 
 def risk_level_for(predicted_class: str | None) -> str:
+    if not predicted_class or predicted_class in ("Not available", "RETAKE REQUIRED"):
+        return "Unassessed"
     if predicted_class == "Mild":
         return "Medium"
     if predicted_class in ("Moderate", "Severe", "ProliferativeDR"):
@@ -40,7 +42,12 @@ def next_screening_number(existing_ids: list[str], year: str) -> int:
     A fresh 3-digit sequence starts at 001 for each year.
     """
     prefix = f"JN-{year}-"
-    numbers = [int(i[len(prefix) :]) for i in existing_ids if i.startswith(prefix)]
+    numbers = []
+    for i in existing_ids:
+        if i.startswith(prefix):
+            suffix = i[len(prefix) :]
+            if suffix.isdigit():
+                numbers.append(int(suffix))
     return (max(numbers) + 1) if numbers else 1
 
 

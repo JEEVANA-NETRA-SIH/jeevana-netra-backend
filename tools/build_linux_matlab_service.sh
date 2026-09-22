@@ -59,7 +59,11 @@ mcc -m run_jeevana_service.m \
 echo "==> Installing into $OUT"
 rm -rf "$OUT"
 mkdir -p "$OUT"
-cp -a "$BUILD_DIR/jeevana_netra_service/." "$OUT/"
+if [ -d "$BUILD_DIR/jeevana_netra_service" ]; then
+    cp -a "$BUILD_DIR/jeevana_netra_service/." "$OUT/"
+else
+    cp -a "$BUILD_DIR/." "$OUT/"
+fi
 
 echo "==> Artifact verification"
 file "$OUT/jeevana_netra_service"

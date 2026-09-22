@@ -109,6 +109,8 @@ async def report_generate(
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(pdf_bytes)),
+            "X-Report-Filename": filename,
         },
     )
 
@@ -130,9 +132,12 @@ async def _parse_json(request: Request) -> dict:
     except ValueError as exc:
         raise ApiError(400, str(exc)) from exc
 
+    patient_dict = model.patient.model_dump() if hasattr(model.patient, "model_dump") else dict(model.patient)
+    result_dict = model.result if isinstance(model.result, dict) else model.result.model_dump()
+
     return build_matlab_request(
-        patient=model.patient.model_dump(),
-        result=model.result.model_dump(),
+        patient=patient_dict,
+        result=result_dict,
         screeningId=model.screeningId,
         image_bytes=image_bytes,
     )
@@ -142,7 +147,7 @@ async def _parse_multipart(request: Request) -> dict:
     form = await request.form()
     image_file = form.get("image")
     patient_raw = form.get("patient")
-    result_raw = form.get("result")
+    result_raw = form.get("result") or form.get("screening")
     screening_id = form.get("screeningId")
 
     if image_file is None:
@@ -178,30 +183,42 @@ def build_matlab_request(
     screeningId: str | None,
     image_bytes: bytes,
 ) -> dict:
-    """Shape a request identical to what jeevana_report_json_api expects.
+    """Shape a request matching jeevana_report_json_api / jeevana_report_api.
 
-    imageBytes is sent as an integer array; MATLAB jsondecode gives a double
-    vector and jeevana_report_api converts it with uint8(...).
+    Both imageBase64 and imageBytes are sent to guarantee full compatibility.
     """
+    resolved_id = str(patient.get("id") or patient.get("patientId") or "Unknown").strip() or "Unknown"
+    image_b64 = base64.b64encode(image_bytes).decode("ascii")
     return {
         "operation": "generate_report",
         "screeningId": screeningId or "JN-REPORT",
         "patient": {
             "name": patient.get("name", "Unknown"),
-            "id": patient.get("id", "Unknown"),
+            "id": resolved_id,
+            "patientId": resolved_id,
             "gender": patient.get("gender", "Not specified"),
             "age": patient.get("age"),
         },
         "result": result,
+        "imageBase64": image_b64,
         "imageBytes": list(image_bytes),
     }
 
 
 def decode_base64(value: str) -> bytes:
+    if not isinstance(value, str):
+        raise ApiError(400, "imageBase64 is not valid base64.")
+    # Strip data URL prefix if present (e.g. data:image/png;base64,...)
+    if "," in value and "base64" in value[:60]:
+        value = value.split(",", 1)[1]
+    value = re.sub(r"\s+", "", value)
     try:
         return base64.b64decode(value, validate=True)
-    except (ValueError, TypeError) as exc:
-        raise ApiError(400, "imageBase64 is not valid base64.") from exc
+    except (ValueError, TypeError):
+        try:
+            return base64.b64decode(value)
+        except Exception as exc:
+            raise ApiError(400, "imageBase64 is not valid base64.") from exc
 
 
 def _extract_pdf_bytes(matlab_out: dict) -> bytes:

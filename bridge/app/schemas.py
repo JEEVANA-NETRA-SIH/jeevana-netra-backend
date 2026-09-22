@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # ---------------------------------------------------------------------------
 # Patients
@@ -18,17 +18,23 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class PatientIn(BaseModel):
-    patientId: str = Field(..., min_length=1, max_length=64)
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    patientId: str | None = Field(default=None, max_length=64)
+    id: str | None = Field(default=None, max_length=64)
     name: str = Field(..., min_length=1, max_length=200)
     age: float | None = Field(default=None, ge=0, le=130)
     gender: str | None = Field(default=None, max_length=32)
 
-    @field_validator("patientId")
-    @classmethod
-    def _patient_id_not_blank(cls, value: str) -> str:
-        if not value.strip():
+    @model_validator(mode="after")
+    def _sync_ids(self) -> "PatientIn":
+        resolved = (self.patientId or self.id or "").strip()
+        if not resolved:
             raise ValueError("patientId must not be blank.")
-        return value.strip()
+        self.patientId = resolved
+        if self.id is None:
+            self.id = resolved
+        return self
 
 
 class PatientRecord(BaseModel):
@@ -102,10 +108,21 @@ class ScreeningSaveIn(BaseModel):
 
 
 class ReportPatientIn(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    id: str = Field(..., min_length=1, max_length=64)
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    name: str = Field(default="Unknown", min_length=1, max_length=200)
+    id: str | None = Field(default=None, max_length=64)
+    patientId: str | None = Field(default=None, max_length=64)
     gender: str | None = Field(default=None, max_length=32)
     age: float | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def _sync_ids(self) -> "ReportPatientIn":
+        resolved = (self.id or self.patientId or "Unknown").strip()
+        self.id = resolved
+        if self.patientId is None:
+            self.patientId = resolved
+        return self
 
 
 class ReportRequestIn(BaseModel):
@@ -114,8 +131,15 @@ class ReportRequestIn(BaseModel):
     operation: str = "generate_report"
     screeningId: str | None = None
     patient: ReportPatientIn
-    result: ScreeningResultIn
+    result: dict[str, Any] | ScreeningResultIn = Field(default_factory=dict)
+    screening: dict[str, Any] | ScreeningResultIn | None = None
     imageBase64: str = Field(..., min_length=1)
+
+    @model_validator(mode="after")
+    def _resolve_result(self) -> "ReportRequestIn":
+        if not self.result and self.screening:
+            self.result = self.screening
+        return self
 
 
 # ---------------------------------------------------------------------------

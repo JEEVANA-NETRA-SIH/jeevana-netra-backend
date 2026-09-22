@@ -67,6 +67,14 @@ end
 H = size(I,1);
 W = size(I,2);
 
+% Ensure image dimensions are at least patchSize
+if H < patchSize || W < patchSize
+    scale = max(patchSize / H, patchSize / W);
+    I = imresize(I, ceil([H * scale, W * scale]));
+    H = size(I,1);
+    W = size(I,2);
+end
+
 %% Create patch locations
 
 stride = 112;
@@ -247,7 +255,11 @@ for c = 1:numClasses
     evidence.lesion(c) = lesionResult;
 
     fprintf('\n%s\n',lesionName);
-    fprintf('Top score: %.4f\n',sortedScores(1));
+    if ~isempty(sortedScores)
+        fprintf('Top score: %.4f\n',sortedScores(1));
+    else
+        fprintf('Top score: 0.0000\n');
+    end
     fprintf('Threshold: %.4f\n',thresholds(c));
     fprintf('Grad-CAM patches used: %d\n',usedCount);
 

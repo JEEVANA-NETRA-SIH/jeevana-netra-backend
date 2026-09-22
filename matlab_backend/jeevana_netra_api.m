@@ -19,7 +19,14 @@ end
 %% 2. Create temporary image file
 
 tempDir = tempdir;
-tempImage = fullfile(tempDir,"jeevana_netra_input.png");
+if numel(imageData) >= 8 && isequal(imageData(1:8), uint8([137 80 78 71 13 10 26 10]))
+    imgExt = ".png";
+else
+    imgExt = ".jpg";
+end
+
+token = char(java.util.UUID.randomUUID.toString());
+tempImage = fullfile(tempDir, "jin_in_" + token + imgExt);
 
 try
 

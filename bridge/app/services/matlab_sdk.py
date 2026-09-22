@@ -33,14 +33,18 @@ class MatlabSdkService(MatlabService):
         if self._package is not None:
             return
         try:
-            self._package = importlib.import_module(self.package_name)
+            mod = importlib.import_module(self.package_name)
+            # MATLAB Compiler SDK packages expose an initialize() method or class
+            self._package = mod.initialize() if hasattr(mod, "initialize") else mod
             self._functions = {
-                "screen": self._package.jeevana_netra_json_api,
-                "generate_report": self._package.jeevana_report_json_api,
+                "screen": getattr(self._package, "jeevana_netra_json_api", None)
+                or getattr(mod, "jeevana_netra_json_api", None),
+                "generate_report": getattr(self._package, "jeevana_report_json_api", None)
+                or getattr(mod, "jeevana_report_json_api", None),
             }
         except Exception as exc:  # noqa: BLE001 - surfaced to health/503 only
             raise MatlabExecutionError(
-                f"MATLAB SDK package '{self.package_name}' could not be imported."
+                f"MATLAB SDK package '{self.package_name}' could not be imported: {exc}"
             ) from exc
 
     def is_configured(self) -> bool:
@@ -58,7 +62,10 @@ class MatlabSdkService(MatlabService):
 
         request_json = json.dumps(payload)
         try:
-            raw = fn(request_json)
+            try:
+                raw = fn(request_json, nargout=1)
+            except TypeError:
+                raw = fn(request_json)
             if hasattr(raw, "toarray") and callable(raw.toarray):
                 raw = raw.toarray()
             text = str(raw)

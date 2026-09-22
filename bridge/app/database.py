@@ -17,20 +17,25 @@ from .config import settings
 from .models import Base
 
 _engine = None
+_SessionFactory = None
 
 
 def _build_engine(url: str):
     if url.startswith("sqlite"):
-        url = url.replace("sqlite:///", "")
+        path_part = url.replace("sqlite:///", "")
         from pathlib import Path
 
-        # Relative sqlite paths are resolved against the bridge directory.
-        if not Path(url).is_absolute():
-            from .config import settings as s
+        if path_part == ":memory:":
+            resolved_url = "sqlite:///:memory:"
+        else:
+            if not Path(path_part).is_absolute():
+                from .config import settings as s
 
-            url = str(s.default_db_dir.parent / url)
+                path_part = str(s.default_db_dir.parent / path_part)
+            resolved_url = f"sqlite:///{path_part}"
+
         engine = create_engine(
-            f"sqlite:///{url}",
+            resolved_url,
             connect_args={"check_same_thread": False},
         )
 
@@ -45,12 +50,6 @@ def _build_engine(url: str):
     return create_engine(url)
 
 
-def _session_factory():
-    return sessionmaker(
-        bind=get_engine(), autoflush=False, autocommit=False, expire_on_commit=False
-    )
-
-
 def get_engine():
     global _engine
     if _engine is None:
@@ -58,19 +57,36 @@ def get_engine():
     return _engine
 
 
+def get_session_factory():
+    global _SessionFactory
+    if _SessionFactory is None:
+        _SessionFactory = sessionmaker(
+            bind=get_engine(), autoflush=False, autocommit=False, expire_on_commit=False
+        )
+    return _SessionFactory
+
+
 def reset_engine() -> None:
     """Close and drop the cached engine (used by tests)."""
-    global _engine
+    global _engine, _SessionFactory
     if _engine is not None:
         _engine.dispose()
         _engine = None
+    _SessionFactory = None
 
 
 def init_db() -> None:
     Base.metadata.create_all(bind=get_engine())
 
 
-SessionLocal = _session_factory()
+class _SessionLocalProxy:
+    """Callable proxy ensuring sessions always bind to the active engine."""
+
+    def __call__(self, *args, **kwargs) -> Session:
+        return get_session_factory()(*args, **kwargs)
+
+
+SessionLocal = _SessionLocalProxy()
 
 
 def get_db() -> Iterator[Session]:

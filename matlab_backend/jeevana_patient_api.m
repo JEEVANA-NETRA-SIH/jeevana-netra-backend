@@ -1,4 +1,8 @@
-%% JEEVANA NETRA - PATIENT / SCREENING DATABASE API
+%% JEEVANA NETRA - PATIENT / SCREENING DATABASE API (REFERENCE IMPLEMENTATION)
+%
+% Note: Active production persistence is handled by the FastAPI HTTP bridge
+% (SQLAlchemy) as Database Toolbox cannot be packaged with MATLAB Compiler.
+% This file is preserved for reference and standalone MATLAB testing.
 %
 % Real SQLite-backed patient and screening data service.
 %
@@ -964,6 +968,10 @@ switch string(predictedClass)
     case {"Moderate","Severe","ProliferativeDR"}
 
         risk = "High";
+
+    case {"Not available","RETAKE REQUIRED",""}
+
+        risk = "Unassessed";
 
     otherwise
 

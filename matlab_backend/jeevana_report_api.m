@@ -40,15 +40,18 @@ if ~isfield(request,"result")
     error("Screening result is required.");
 end
 
-if ~isfield(request,"imageBytes")
-    error("Image bytes are required.");
+if ~isfield(request,"imageBytes") && ~isfield(request,"imageBase64")
+    error("Image data is required (imageBase64 or imageBytes).");
 end
 
 patient = request.patient;
 result = request.result;
 
 patientName = getStringField(patient,"name","Unknown");
-patientId = getStringField(patient,"id","Unknown");
+patientId = getStringField(patient,"id","");
+if patientId == "" || patientId == "Unknown"
+    patientId = getStringField(patient,"patientId","Unknown");
+end
 patientGender = getStringField(patient,"gender","Not specified");
 patientAge = getNumericField(patient,"age",NaN);
 
@@ -89,7 +92,14 @@ end
 
 evidenceCount = countEvidenceRegions(lesionEvidence);
 
-imageBytes = uint8(request.imageBytes(:));
+if isfield(request,"imageBase64") && ~isempty(request.imageBase64)
+    imageBytes = matlab.net.base64decode(char(request.imageBase64));
+elseif isfield(request,"imageBytes") && ~isempty(request.imageBytes)
+    imageBytes = uint8(request.imageBytes(:));
+else
+    error("Image data is required (imageBase64 or imageBytes).");
+end
+
 if isempty(imageBytes)
     error("Image bytes are empty.");
 end
@@ -106,8 +116,9 @@ else
 end
 
 tempDir = tempdir;
-tempImage = fullfile(tempDir,"jeevana_netra_report_input" + imageExtension);
-tempPdf = fullfile(tempDir,"jeevana_netra_report.pdf");
+token = char(java.util.UUID.randomUUID.toString());
+tempImage = fullfile(tempDir,"jin_rep_in_" + token + imageExtension);
+tempPdf = fullfile(tempDir,"jin_rep_out_" + token + ".pdf");
 
 deleteIfExists(tempImage);
 deleteIfExists(tempPdf);
@@ -316,7 +327,7 @@ text(ax,24,75.0,evidenceSummary,"Color",evidenceColor,"FontSize",7.1,"Interprete
 
 % Detected region table.
 drawSectionHeader(ax,82.8,"DETECTED REGIONS","Position","Area","Strength",TEXT,GRID,MUTED);
-rows = makeEvidenceRows(lesionEvidence);
+rows = makeEvidenceRows(lesionEvidence, size(retinalImage));
 rowY = 91.8;
 if isempty(rows)
     rectangle(ax,"Position",[5 91.6 90 8.0],"FaceColor",BG,"EdgeColor",GRID,"LineWidth",0.5);
@@ -715,7 +726,10 @@ else
 end
 end
 
-function rows = makeEvidenceRows(evidence)
+function rows = makeEvidenceRows(evidence, imageSize)
+if nargin < 2 || isempty(imageSize)
+    imageSize = [512 512 3];
+end
 rows = cell(0,4);
 if ~isstruct(evidence) || isempty(evidence)
     return;
@@ -725,9 +739,17 @@ flat = cell(0,1);
 if isfield(evidence,"regions")
     for i = 1:numel(evidence)
         regs = evidence(i).regions;
+        lesionType = "";
+        if isfield(evidence(i),"type") && ~isempty(evidence(i).type)
+            lesionType = string(evidence(i).type);
+        end
         if isstruct(regs)
             for j = 1:numel(regs)
-                flat{end+1,1} = regs(j); %#ok<AGROW>
+                item = regs(j);
+                if (~isfield(item,"type") || isempty(item.type) || string(item.type) == "evidence") && lesionType ~= ""
+                    item.type = lesionType;
+                end
+                flat{end+1,1} = item; %#ok<AGROW>
             end
         end
     end
@@ -740,7 +762,7 @@ end
 for i = 1:numel(flat)
     r = flat{i};
     pos = "n/a";
-    [ok,x,y,~,~] = getRegionBox(r,[512 512 3]);
+    [ok,x,y,~,~] = getRegionBox(r,imageSize);
     if ok
         pos = string(sprintf("(%d,%d)",round(x),round(y)));
     elseif isfield(r,"position")

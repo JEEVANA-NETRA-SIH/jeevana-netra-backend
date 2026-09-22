@@ -63,10 +63,14 @@ def matlab_health_status() -> dict:
             "status": MatlabService.runtime_status(),
             "mode": settings.matlab_mode,
         }
+    mode = settings.matlab_mode or "none"
+    detail = (
+        "MATLAB backend selected but not available."
+        if mode not in ("", "none")
+        else "MATLAB screening service is not configured."
+    )
     return {
         "status": "unavailable",
-        "mode": settings.matlab_mode or "none",
-        "detail": settings.matlab_mode
-        and "MATLAB backend selected but not available."
-        or "MATLAB screening service is not configured.",
+        "mode": mode,
+        "detail": detail,
     }
