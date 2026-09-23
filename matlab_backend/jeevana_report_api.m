@@ -94,6 +94,7 @@ evidenceCount = countEvidenceRegions(lesionEvidence);
 
 if isfield(request,"imageBase64") && ~isempty(request.imageBase64)
     imageBytes = matlab.net.base64decode(char(request.imageBase64));
+    imageBytes = uint8(imageBytes(:));
 elseif isfield(request,"imageBytes") && ~isempty(request.imageBytes)
     imageBytes = uint8(request.imageBytes(:));
 else
@@ -475,7 +476,8 @@ if numel(bytes) < 8
     return;
 end
 signature = uint8([137 80 78 71 13 10 26 10]);
-tf = isequal(bytes(1:8)',signature);
+b = uint8(bytes(1:8));
+tf = isequal(b(:)',signature(:)');
 end
 
 function tf = isJpegBytes(bytes)
@@ -484,7 +486,8 @@ if numel(bytes) < 3
     return;
 end
 signature = uint8([255 216 255]);
-tf = isequal(bytes(1:3)',signature);
+b = uint8(bytes(1:3));
+tf = isequal(b(:)',signature(:)');
 end
 
 function p = getProbability(result,name)
