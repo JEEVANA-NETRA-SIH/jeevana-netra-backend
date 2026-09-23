@@ -40,19 +40,25 @@ end
 
 %% Load model
 
-D = load(modelFile,'trainedNet','classNames','inputSize');
+persistent persistentNet persistentClassNames persistentInputSize persistentThresholds
 
-net = D.trainedNet;
-classNames = string(D.classNames);
-inputSize = double(D.inputSize);
+if isempty(persistentNet)
+    D = load(modelFile,'trainedNet','classNames','inputSize');
+    persistentNet = D.trainedNet;
+    persistentClassNames = string(D.classNames);
+    persistentInputSize = double(D.inputSize);
+
+    T = load(thresholdFile,'bestThresholds');
+    persistentThresholds = double(T.bestThresholds);
+end
+
+net = persistentNet;
+classNames = persistentClassNames;
+inputSize = persistentInputSize;
+thresholds = persistentThresholds;
 
 patchSize = inputSize(1);
 numClasses = numel(classNames);
-
-%% Load thresholds
-
-T = load(thresholdFile,'bestThresholds');
-thresholds = double(T.bestThresholds);
 
 %% Prepare image
 
