@@ -19,7 +19,8 @@ end
 %% 2. Create temporary image file
 
 tempDir = tempdir;
-if numel(imageData) >= 8 && isequal(imageData(1:8), uint8([137 80 78 71 13 10 26 10]))
+sigPng = uint8([137 80 78 71 13 10 26 10]);
+if numel(imageData) >= 8 && isequal(reshape(imageData(1:8), 1, []), sigPng)
     imgExt = ".png";
 else
     imgExt = ".jpg";
