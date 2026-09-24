@@ -73,6 +73,23 @@ class Settings:
         if raw_timeout := os.getenv("MATLAB_TIMEOUT_SECONDS"):
             settings.matlab_timeout_seconds = float(raw_timeout)
 
+        # Auto-detect local runner for seamless local development
+        if settings.matlab_mode == "none" and not settings.matlab_exe:
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            local_bat = repo_root / "matlab_backend" / "run_matlab_local.bat"
+            local_exe_win = repo_root / "matlab_backend" / "jeevana_netra_service.exe"
+            local_exe_lin = repo_root / "matlab_service" / "jeevana_netra_service"
+
+            if local_bat.is_file():
+                settings.matlab_mode = "cli"
+                settings.matlab_exe = str(local_bat)
+            elif local_exe_win.is_file():
+                settings.matlab_mode = "cli"
+                settings.matlab_exe = str(local_exe_win)
+            elif local_exe_lin.is_file():
+                settings.matlab_mode = "cli"
+                settings.matlab_exe = str(local_exe_lin)
+
         if raw_origins := os.getenv("CORS_ORIGINS"):
             settings.cors_origins = [
                 origin.strip() for origin in raw_origins.split(",") if origin.strip()
