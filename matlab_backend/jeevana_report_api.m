@@ -418,7 +418,7 @@ text(ax,96.0,7.8,"Date: " + string(examDate),"Color",TEXT_LIGHT,"FontSize",6.0,"
 text(ax,96.0,11.5,"Architecture: ResNet-101 • Grad-CAM","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
 
 % Export Exactly 1 Page
-exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor",[7 20 36]/255);
+exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor","current");
 close(fig);
 
 % ============================================================
