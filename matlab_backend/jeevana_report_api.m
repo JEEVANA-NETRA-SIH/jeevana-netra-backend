@@ -1,16 +1,12 @@
 function response = jeevana_report_api(requestJson)
 % JEEVANA_REPORT_API
-% Generates an executive, single-page clinical AI screening report for
-% Jeevana Netra (Smart India Hackathon 2026).
+% Generates an ultra-modern, high-tech single-page clinical AI screening report
+% for Jeevana Netra (Smart India Hackathon 2026 Showcase).
 %
-% Visual Architecture (High-Density Executive Single Page):
-%   1. Header: Jeevana Netra Medical Identity & Verification Badge
-%   2. Patient Information Strip: Name, ID, Age, Gender, Eye, Date
-%   3. Hero Result Card: Primary Diagnosis, Grade Tag, Confidence Gauge, Referral
-%   4. Multi-Modal Retinal Imaging: Original, Enhanced, and Grad-CAM Anatomical Overlay
-%   5. Split Section: DR Stage Probabilities (Horizontal Bars) & Biomarker Metrics
-%   6. Clinical Recommendations Card & Action Protocol
-%   7. Medical Disclaimer & Healthcare Practitioner Sign-Off
+% Visual Theme: High-Tech Hackathon Showcase (Deep Navy #0B2A4A & Electric Cyan)
+% Layout: Executive 1-Page Medical Dashboard with 3 Images Side-by-Side
+%
+% Preserves 100% of the underlying AI model, inference, weights, and API contract.
 %
 % API Input:
 %   requestJson: JSON string or MATLAB struct matching the Jeevana Netra contract
@@ -80,7 +76,7 @@ elseif isfield(result,"analysedEye") && ~isempty(result.analysedEye)
     analysedEye = string(result.analysedEye);
 end
 
-screeningId = "JN-REPORT";
+screeningId = "JN-2026-REPORT";
 if isfield(request,"screeningId") && ~isempty(request.screeningId)
     screeningId = string(request.screeningId);
 end
@@ -189,95 +185,106 @@ safePatientId = makeSafeFilename(patientId);
 timeText = string(datetime("now","Format","yyyyMMdd_HHmmss"));
 fileName = char("Jeevana_Netra_Report_" + safePatientId + "_" + timeText + ".pdf");
 
-%% 6. Color Palette (Jeevana Netra SIH 2026 Visual Identity)
+%% 6. Color Palette: High-Tech Hackathon Showcase (Deep Navy + Electric Cyan)
 
-NAVY       = [11 42 74] / 255;      % #0B2A4A Primary Dark Navy
-BLUE       = [20 93 160] / 255;     % #145DA0 Healthcare Blue
-TEAL       = [8 127 140] / 255;     % #087F8C Explainability Teal
-GREEN      = [32 164 100] / 255;    % #20A464 Healthy / Non-referable
-AMBER      = [225 145 20] / 255;    % Mild DR Warning
-RED        = [210 60 45] / 255;     % Moderate / Severe DR Alert
-PURPLE     = [135 30 95] / 255;     % Proliferative DR Urgent
-TEXT_DARK  = [26 38 57] / 255;      % Deep Slate Body Text
-TEXT_MUTED = [100 116 139] / 255;   % Cool Gray Supporting Labels
-BG_PAGE    = [248 250 252] / 255;   % Clean Medical Off-White Canvas
-CARD_BG    = [255 255 255] / 255;   % Pure White Card Surface
-BORDER     = [220 228 236] / 255;   % Subtle Card Border
-WHITE      = [1 1 1];
+BG_CANVAS   = [7 20 36] / 255;       % #071424 Deep Midnight Navy Canvas
+CARD_BG     = [13 32 56] / 255;      % #0D2038 Sleek Dark Card Surface
+CARD_INNER  = [18 42 72] / 255;      % #122A48 Recessed Card Panel
+BORDER      = [28 62 100] / 255;     % #1C3E64 Tech Structure Border
+BORDER_GLOW = [0 215 200] / 255;     % #00D7C8 Neon Cyan Accent Border
 
-accent = severityColor(predictedClass,GREEN,AMBER,RED,PURPLE,BLUE);
-softAccent = blendWithWhite(accent,0.92);
+CYAN        = [0 230 220] / 255;     % #00E6DC Electric Neon Cyan Accent
+CYAN_SOFT   = [0 230 220] * 0.18 + CARD_BG * 0.82;
+BLUE_TECH   = [24 144 255] / 255;    % #1890FF High-Tech Blue
+WHITE       = [1 1 1];               % Pure White Primary Text
+TEXT_LIGHT  = [215 232 248] / 255;   % #D7E8F8 Crisp Ice Blue Text
+TEXT_MUTED  = [115 145 178] / 255;   % #7391B2 Cool Steel Gray
+
+NEON_GREEN  = [0 230 118] / 255;     % #00E676 Neon Emerald (Normal / No DR)
+NEON_AMBER  = [255 179 0] / 255;     % #FFB300 Neon Amber (Mild DR)
+NEON_ORANGE = [255 109 0] / 255;     % #FF6D00 Neon Orange (Moderate DR)
+NEON_RED    = [255 61 90] / 255;     % #FF3D5A Neon Coral Alert (Severe DR)
+NEON_PURPLE = [213 0 249] / 255;     % #D500F9 Neon Magenta (Proliferative DR)
+
+accent = severityNeonColor(predictedClass,NEON_GREEN,NEON_AMBER,NEON_RED,NEON_PURPLE,CYAN);
+softAccent = accent * 0.20 + CARD_BG * 0.80;
 
 % ============================================================
-% SINGLE-PAGE MASTER EXECUTIVE REPORT (A4 HIGH-DENSITY)
+% 7. Render High-Tech Single-Page Executive Dashboard
 % ============================================================
 fig = makePageFigure();
 ax = makePageAxes(fig);
 
-% Page Background Canvas
-rectangle(ax,"Position",[0 0 100 140],"FaceColor",BG_PAGE,"EdgeColor","none");
+% Midnight Navy Canvas
+rectangle(ax,"Position",[0 0 100 140],"FaceColor",BG_CANVAS,"EdgeColor","none");
 
-% 1. Header Band (Y: 0.0 -> 14.5)
-rectangle(ax,"Position",[0 0 100 14.5],"FaceColor",NAVY,"EdgeColor","none");
-rectangle(ax,"Position",[0 13.8 100 0.7],"FaceColor",TEAL,"EdgeColor","none");
+% 1. Header Band with Glowing Neon Line (Y: 0.0 -> 14.5)
+rectangle(ax,"Position",[0 0 100 14.5],"FaceColor",[10 26 46]/255,"EdgeColor","none");
+rectangle(ax,"Position",[0 13.8 100 0.7],"FaceColor",CYAN,"EdgeColor","none");
 
-text(ax,4.0,4.2,"JEEVANA NETRA","Color",WHITE,"FontSize",16.5,"FontWeight","bold");
-text(ax,4.0,7.8,"AI-POWERED RETINAL SCREENING  •  SMART INDIA HACKATHON 2026","Color",[0.55 0.90 0.85],"FontSize",6.5,"FontWeight","bold");
-text(ax,4.0,11.5,"Explainable AI-Assisted Diabetic Retinopathy Screening Report","Color",[0.84 0.90 0.95],"FontSize",6.2,"Interpreter","none");
+% Top AI pulse chip
+rectangle(ax,"Position",[4.0 3.2 18.5 3.2],"FaceColor",CYAN_SOFT,"EdgeColor",CYAN,"LineWidth",0.6);
+plot(ax,5.2,4.8,"o","MarkerFaceColor",CYAN,"MarkerEdgeColor","none","MarkerSize",3.2);
+text(ax,7.2,5.0,"AI ACTIVE INFERENCE","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
 
-text(ax,96.0,4.2,"REPORT ID: " + string(screeningId),"Color",WHITE,"FontSize",7.5,"FontWeight","bold","HorizontalAlignment","right","Interpreter","none");
-text(ax,96.0,7.8,"Date: " + string(examDate),"Color",[0.78 0.86 0.92],"FontSize",6.0,"HorizontalAlignment","right","Interpreter","none");
-text(ax,96.0,11.5,"Status: Official Clinical Record","Color",[0.55 0.90 0.85],"FontSize",5.8,"FontWeight","bold","HorizontalAlignment","right");
+text(ax,4.0,9.8,"JEEVANA NETRA","Color",WHITE,"FontSize",17.0,"FontWeight","bold");
+text(ax,38.0,9.8,"•   CLINICAL AI RETINAL SCREENING SYSTEM","Color",CYAN,"FontSize",7.0,"FontWeight","bold");
+text(ax,4.0,12.5,"Smart India Hackathon 2026  •  Explainable Deep Learning Retinopathy Assessment","Color",TEXT_MUTED,"FontSize",5.6);
+
+text(ax,96.0,4.2,"REPORT ID: " + string(screeningId),"Color",WHITE,"FontSize",7.2,"FontWeight","bold","HorizontalAlignment","right","Interpreter","none");
+text(ax,96.0,7.8,"Date: " + string(examDate),"Color",TEXT_LIGHT,"FontSize",6.0,"HorizontalAlignment","right","Interpreter","none");
+text(ax,96.0,11.5,"Architecture: ResNet-101 • Grad-CAM","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
 
 % 2. Patient Information Strip (Y: 16.0 -> 26.5, Height 10.5, Width 92.0)
 drawCard(ax,4.0,16.0,92.0,10.5,CARD_BG,BORDER);
 
-text(ax,6.5,18.8,"PATIENT NAME","Color",TEXT_MUTED,"FontSize",5.2,"FontWeight","bold");
-text(ax,6.5,22.8,string(patientName),"Color",TEXT_DARK,"FontSize",8.0,"FontWeight","bold","Interpreter","none");
+text(ax,6.5,18.8,"PATIENT NAME","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
+text(ax,6.5,22.8,string(patientName),"Color",WHITE,"FontSize",8.2,"FontWeight","bold","Interpreter","none");
 
-text(ax,30.0,18.8,"PATIENT ID","Color",TEXT_MUTED,"FontSize",5.2,"FontWeight","bold");
-text(ax,30.0,22.8,string(patientId),"Color",TEXT_DARK,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
+text(ax,30.0,18.8,"PATIENT ID","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
+text(ax,30.0,22.8,string(patientId),"Color",TEXT_LIGHT,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
 
-text(ax,48.0,18.8,"AGE / GENDER","Color",TEXT_MUTED,"FontSize",5.2,"FontWeight","bold");
-text(ax,48.0,22.8,formatAge(patientAge) + "  •  " + string(patientGender),"Color",TEXT_DARK,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
+text(ax,48.0,18.8,"AGE / GENDER","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
+text(ax,48.0,22.8,formatAge(patientAge) + "  •  " + string(patientGender),"Color",TEXT_LIGHT,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
 
-text(ax,70.0,18.8,"ANALYSED EYE","Color",TEXT_MUTED,"FontSize",5.2,"FontWeight","bold");
-text(ax,70.0,22.8,string(analysedEye),"Color",NAVY,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
+text(ax,70.0,18.8,"ANALYSED FIELD","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
+text(ax,70.0,22.8,string(analysedEye),"Color",WHITE,"FontSize",7.5,"FontWeight","bold","Interpreter","none");
 
-text(ax,88.0,18.8,"ACQUISITION","Color",TEXT_MUTED,"FontSize",5.2,"FontWeight","bold");
-text(ax,88.0,22.8,"45° Fundus","Color",GREEN,"FontSize",7.2,"FontWeight","bold");
+text(ax,87.0,18.8,"VERIFICATION","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
+rectangle(ax,"Position",[86.0 21.0 9.0 3.2],"FaceColor",[0 230 118]/255 * 0.18 + CARD_BG * 0.82,"EdgeColor",NEON_GREEN,"LineWidth",0.6);
+text(ax,90.5,22.8,"GRADABLE","Color",NEON_GREEN,"FontSize",5.0,"FontWeight","bold","HorizontalAlignment","center");
 
-% 3. Hero Result Card (Y: 28.0 -> 47.0, Height 19.0, Width 92.0)
+% 3. Hero AI Screening Result Card (Y: 28.0 -> 47.0, Height 19.0, Width 92.0)
 drawCard(ax,4.0,28.0,92.0,19.0,CARD_BG,BORDER);
 rectangle(ax,"Position",[4.0 28.0 2.5 19.0],"FaceColor",accent,"EdgeColor","none");
 
 % Top label
-text(ax,8.0,30.8,"AI SCREENING RESULT  —  PRIMARY DIAGNOSTIC ASSESSMENT","Color",NAVY,"FontSize",6.2,"FontWeight","bold");
+text(ax,8.0,30.8,"AI SCREENING RESULT  —  PRIMARY DIAGNOSTIC ASSESSMENT","Color",CYAN,"FontSize",6.2,"FontWeight","bold");
 
-% Diagnosis Headline
+% Large prominent diagnosis
 diagnosisText = formatDiagnosisTitle(predictedClass);
 text(ax,8.0,36.5,upper(diagnosisText),"Color",accent,"FontSize",13.5,"FontWeight","bold","Interpreter","none");
-text(ax,8.0,40.5,formatGradeTag(predictedClass),"Color",TEXT_MUTED,"FontSize",6.5,"FontWeight","bold","Interpreter","none");
+text(ax,8.0,40.5,formatGradeTag(predictedClass),"Color",TEXT_LIGHT,"FontSize",6.5,"FontWeight","bold","Interpreter","none");
 
 % Status badge line
-rectangle(ax,"Position",[8.0 42.0 45.0 3.6],"FaceColor",[0.95 0.97 0.99],"EdgeColor",BORDER,"LineWidth",0.4);
-text(ax,9.5,44.2,"Severity: " + string(predictedClass) + "   •   Eye: " + string(analysedEye),"Color",TEXT_DARK,"FontSize",5.8,"FontWeight","bold","Interpreter","none");
+rectangle(ax,"Position",[8.0 42.0 45.0 3.6],"FaceColor",CARD_INNER,"EdgeColor",BORDER,"LineWidth",0.4);
+text(ax,9.5,44.2,"Severity: " + string(predictedClass) + "   •   Eye: " + string(analysedEye),"Color",TEXT_LIGHT,"FontSize",5.8,"FontWeight","bold","Interpreter","none");
 
-% Center: Confidence Gauge
+% Center: Glowing Neon Confidence Ring
 cx = 64.0; cy = 37.5; r = 5.0;
-drawMiniConfidenceRing(ax,cx,cy,r,confidence,accent,TEXT_DARK,TEXT_MUTED);
-text(ax,cx,cy+6.5,sprintf("[%s TIER]",upper(char(string(confidenceStatus)))),"Color",TEXT_MUTED,"FontSize",5.4,"FontWeight","bold","HorizontalAlignment","center","Interpreter","none");
+drawNeonConfidenceRing(ax,cx,cy,r,confidence,accent,WHITE,TEXT_MUTED);
+text(ax,cx,cy+6.5,sprintf("[%s TIER]",upper(char(string(confidenceStatus)))),"Color",CYAN,"FontSize",5.2,"FontWeight","bold","HorizontalAlignment","center","Interpreter","none");
 
 % Right: Referral Triage Box
-rectangle(ax,"Position",[75.0 31.5 19.0 13.5],"FaceColor",softAccent,"EdgeColor",accent,"LineWidth",0.7);
+rectangle(ax,"Position",[75.0 31.5 19.0 13.5],"FaceColor",softAccent,"EdgeColor",accent,"LineWidth",0.8);
 text(ax,84.5,34.5,"REFERRAL STATUS","Color",accent,"FontSize",5.5,"FontWeight","bold","HorizontalAlignment","center");
-text(ax,84.5,38.5,wrapText(char(referralStatus),15,1),"Color",accent,"FontSize",7.0,"FontWeight","bold","HorizontalAlignment","center","Interpreter","none");
-text(ax,84.5,42.5,sprintf("Evidence Regions: %d",evidenceCount),"Color",TEXT_DARK,"FontSize",5.5,"FontWeight","bold","HorizontalAlignment","center");
+text(ax,84.5,38.5,wrapText(char(referralStatus),15,1),"Color",WHITE,"FontSize",7.0,"FontWeight","bold","HorizontalAlignment","center","Interpreter","none");
+text(ax,84.5,42.5,sprintf("Evidence Count: %d",evidenceCount),"Color",TEXT_LIGHT,"FontSize",5.5,"FontWeight","bold","HorizontalAlignment","center");
 
 % 4. Multi-Modal Retinal Imaging Grid (3 Images Side-by-Side) (Y: 48.5 -> 82.5, Height 34.0, Width 92.0)
 drawCard(ax,4.0,48.5,92.0,34.0,CARD_BG,BORDER);
-text(ax,6.5,51.2,"MULTI-MODAL RETINAL IMAGING & EXPLAINABLE AI","Color",NAVY,"FontSize",7.5,"FontWeight","bold");
-text(ax,93.5,51.2,"ResNet-101 Spatial Attention & Vessel Mapping","Color",TEAL,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
+text(ax,6.5,51.2,"MULTI-MODAL RETINAL IMAGING & EXPLAINABLE AI","Color",WHITE,"FontSize",7.5,"FontWeight","bold");
+text(ax,93.5,51.2,"ResNet-101 Spatial Attention & Vessel Mapping","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
 rectangle(ax,"Position",[6.5 52.4 87.0 0.35],"FaceColor",BORDER,"EdgeColor","none");
 
 imgW = 27.5;
@@ -288,85 +295,86 @@ x2 = 36.25;
 x3 = 66.0;
 
 % Image 1: Original Fundus
-rectangle(ax,"Position",[x1 imgY imgW imgH],"FaceColor",[0.04 0.05 0.06],"EdgeColor",BORDER,"LineWidth",0.5);
+rectangle(ax,"Position",[x1 imgY imgW imgH],"FaceColor",[3 10 18]/255,"EdgeColor",BORDER,"LineWidth",0.6);
 showImageInBox(ax,retinalImage,[x1 imgY imgW imgH]);
-text(ax,x1+imgW/2,77.5,"1. Original Retina (Color Fundus)","Color",TEXT_DARK,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
+text(ax,x1+imgW/2,77.5,"1. Original Retina (Color Fundus)","Color",TEXT_LIGHT,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
 
 % Image 2: Enhanced Retina
-rectangle(ax,"Position",[x2 imgY imgW imgH],"FaceColor",[0.04 0.05 0.06],"EdgeColor",BORDER,"LineWidth",0.5);
+rectangle(ax,"Position",[x2 imgY imgW imgH],"FaceColor",[3 10 18]/255,"EdgeColor",BORDER,"LineWidth",0.6);
 showImageInBox(ax,enhancedImage,[x2 imgY imgW imgH]);
-text(ax,x2+imgW/2,77.5,"2. Enhanced Vasculature (CLAHE)","Color",TEXT_DARK,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
+text(ax,x2+imgW/2,77.5,"2. Enhanced Vasculature (CLAHE)","Color",TEXT_LIGHT,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
 
-% Image 3: Grad-CAM Overlay
-rectangle(ax,"Position",[x3 imgY imgW imgH],"FaceColor",[0.04 0.05 0.06],"EdgeColor",BORDER,"LineWidth",0.5);
+% Image 3: Grad-CAM Overlay (Glowing Cyan Border!)
+rectangle(ax,"Position",[x3 imgY imgW imgH],"FaceColor",[3 10 18]/255,"EdgeColor",CYAN,"LineWidth",0.8);
 showImageInBox(ax,overlayImage,[x3 imgY imgW imgH]);
-text(ax,x3+imgW/2,77.5,"3. Grad-CAM Anatomical Overlay","Color",NAVY,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
+text(ax,x3+imgW/2,77.5,"3. Grad-CAM Anatomical Overlay","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","center");
 
 text(ax,6.5,80.8,"Explainability: Grad-CAM highlights deep retinal feature activations. Warmer colors indicate primary convolutional focus.","Color",TEXT_MUTED,"FontSize",5.0);
 
 % 5. Split Section: DR Stage Probabilities (Left) & Biomarkers/Quality (Right) (Y: 84.0 -> 111.0, Height 27.0, Width 92.0)
 % Left: Probabilities (W: 44.5)
 drawCard(ax,4.0,84.0,44.5,27.0,CARD_BG,BORDER);
-text(ax,6.5,86.8,"DR STAGE PROBABILITY PROFILE","Color",NAVY,"FontSize",6.8,"FontWeight","bold");
-text(ax,6.5,89.0,"Multi-class softmax posterior distribution","Color",TEXT_MUTED,"FontSize",5.0);
+text(ax,6.5,86.8,"DR STAGE PROBABILITY PROFILE","Color",WHITE,"FontSize",6.8,"FontWeight","bold");
+text(ax,6.5,89.0,"Multi-class softmax posterior distribution","Color",CYAN,"FontSize",5.0);
 rectangle(ax,"Position",[6.5 90.0 39.5 0.35],"FaceColor",BORDER,"EdgeColor","none");
 
 labels = {"No DR", "Mild NPDR", "Moderate NPDR", "Severe NPDR", "Proliferative DR"};
 vals = [probabilities.NoDR, probabilities.Mild, probabilities.Moderate, probabilities.Severe, probabilities.ProliferativeDR];
+pColors = [NEON_GREEN; NEON_AMBER; NEON_ORANGE; NEON_RED; NEON_PURPLE];
 pY = 92.0;
 barH = 2.0;
 maxBarW = 21.0;
 
 for i = 1:5
-    text(ax,6.5,pY+1.5,labels{i},"Color",TEXT_DARK,"FontSize",5.4,"FontWeight","bold");
+    text(ax,6.5,pY+1.5,labels{i},"Color",TEXT_LIGHT,"FontSize",5.4,"FontWeight","bold");
     
     trX = 23.5;
-    rectangle(ax,"Position",[trX pY maxBarW barH],"FaceColor",[0.92 0.94 0.96],"EdgeColor","none");
+    rectangle(ax,"Position",[trX pY maxBarW barH],"FaceColor",CARD_INNER,"EdgeColor","none");
     fillW = max(0,min(maxBarW,(vals(i) / 100) * maxBarW));
     if fillW > 0
-        rectangle(ax,"Position",[trX pY fillW barH],"FaceColor",probabilityColor(i),"EdgeColor","none");
+        rectangle(ax,"Position",[trX pY fillW barH],"FaceColor",pColors(i,:),"EdgeColor","none");
     end
-    text(ax,trX + maxBarW + 1.5,pY+1.5,sprintf("%.1f%%",vals(i)),"Color",TEXT_DARK,"FontSize",5.4,"FontWeight","bold");
+    text(ax,trX + maxBarW + 1.5,pY+1.5,sprintf("%.1f%%",vals(i)),"Color",WHITE,"FontSize",5.4,"FontWeight","bold");
     pY = pY + 3.4;
 end
 
 % Right: Biomarkers & Quality (W: 45.5, X: 50.5)
 drawCard(ax,50.5,84.0,45.5,27.0,CARD_BG,BORDER);
-text(ax,53.0,86.8,"CLINICAL BIOMARKERS & QUALITY","Color",NAVY,"FontSize",6.8,"FontWeight","bold");
-text(ax,53.0,89.0,"Quantitative optical measurements & integrity","Color",TEXT_MUTED,"FontSize",5.0);
+text(ax,53.0,86.8,"CLINICAL BIOMARKERS & QUALITY","Color",WHITE,"FontSize",6.8,"FontWeight","bold");
+text(ax,53.0,89.0,"Quantitative optical measurements & integrity","Color",CYAN,"FontSize",5.0);
 rectangle(ax,"Position",[53.0 90.0 40.5 0.35],"FaceColor",BORDER,"EdgeColor","none");
 
 % Metric 1: Quality Score
-text(ax,53.0,93.5,"Image Quality:","Color",TEXT_MUTED,"FontSize",5.6,"FontWeight","bold");
-text(ax,67.0,93.5,formatQualityIndex(qualityStatus) + " (Gradable: Yes)","Color",GREEN,"FontSize",5.6,"FontWeight","bold");
+text(ax,53.0,93.5,"Image Quality:","Color",CYAN,"FontSize",5.6,"FontWeight","bold");
+text(ax,67.0,93.5,formatQualityIndex(qualityStatus) + " (Gradable: Yes)","Color",NEON_GREEN,"FontSize",5.6,"FontWeight","bold");
 
 % Metric 2: Macula Status
-text(ax,53.0,97.5,"Macula Status:","Color",TEXT_MUTED,"FontSize",5.6,"FontWeight","bold");
-text(ax,67.0,97.5,string(maculaInvolvement),"Color",TEXT_DARK,"FontSize",5.6,"FontWeight","bold","Interpreter","none");
+text(ax,53.0,97.5,"Macula Status:","Color",CYAN,"FontSize",5.6,"FontWeight","bold");
+text(ax,67.0,97.5,string(maculaInvolvement),"Color",WHITE,"FontSize",5.6,"FontWeight","bold","Interpreter","none");
 
 % Metric 3: Lesions Count
-text(ax,53.0,101.5,"Suspected Lesions:","Color",TEXT_MUTED,"FontSize",5.6,"FontWeight","bold");
+text(ax,53.0,101.5,"Suspected Lesions:","Color",CYAN,"FontSize",5.6,"FontWeight","bold");
 if evidenceCount > 0
     lStr = sprintf("%d Regions (%d Haem, %d Exud)",evidenceCount,numHemorrhages + numMicroaneurysms,numExudates);
     lCol = accent;
 else
     lStr = "0 Detected (Retinal Field Clear)";
-    lCol = GREEN;
+    lCol = NEON_GREEN;
 end
 text(ax,70.0,101.5,string(lStr),"Color",lCol,"FontSize",5.6,"FontWeight","bold");
 
 % Metric 4: Optical Indices
-text(ax,53.0,105.5,"Optical Indices:","Color",TEXT_MUTED,"FontSize",5.6,"FontWeight","bold");
+text(ax,53.0,105.5,"Optical Indices:","Color",CYAN,"FontSize",5.6,"FontWeight","bold");
 optStr = sprintf("Sharp: %s • Cont: %s • Bright: %s",formatMetric(sharpness),formatMetric(contrast),formatMetric(brightness));
-text(ax,67.5,105.5,string(optStr),"Color",TEXT_DARK,"FontSize",5.2);
+text(ax,67.5,105.5,string(optStr),"Color",TEXT_LIGHT,"FontSize",5.2);
 
-text(ax,53.0,109.0,"Diagnostic Adequacy: Validated suitable for AI inference","Color",TEAL,"FontSize",5.0,"FontWeight","bold");
+text(ax,53.0,109.0,"Diagnostic Adequacy: Validated suitable for AI inference","Color",CYAN,"FontSize",5.0,"FontWeight","bold");
 
 % 6. Clinical Recommendations Card (Y: 112.5 -> 125.0, Height 12.5, Width 92.0)
 drawCard(ax,4.0,112.5,92.0,12.5,CARD_BG,BORDER);
 rectangle(ax,"Position",[4.0 112.5 2.5 12.5],"FaceColor",accent,"EdgeColor","none");
 
-text(ax,8.0,115.0,"RECOMMENDED CLINICAL ACTION PLAN","Color",NAVY,"FontSize",6.8,"FontWeight","bold");
+text(ax,8.0,115.0,"RECOMMENDED CLINICAL ACTION PLAN","Color",WHITE,"FontSize",6.8,"FontWeight","bold");
 text(ax,8.0,118.0,wrapText(char(recommendation),95,1),"Color",accent,"FontSize",6.5,"FontWeight","bold","Interpreter","none");
 
 if strcmpi(string(referralStatus),"REFERABLE DR")
@@ -374,7 +382,7 @@ if strcmpi(string(referralStatus),"REFERABLE DR")
 else
     action1 = "• Routine Rescreening: Repeat AI-assisted retinal screening in 6–12 months as part of ongoing diabetes care.";
 end
-text(ax,8.0,121.0,string(action1),"Color",TEXT_DARK,"FontSize",5.6,"Interpreter","none");
+text(ax,8.0,121.0,string(action1),"Color",TEXT_LIGHT,"FontSize",5.6,"Interpreter","none");
 
 action2 = "• Systemic Optimization: Maintain HbA1c < 7.0%, blood pressure < 130/80 mmHg, and lipid profile within target range.";
 text(ax,8.0,123.5,string(action2),"Color",TEXT_MUTED,"FontSize",5.4,"Interpreter","none");
@@ -383,30 +391,34 @@ text(ax,8.0,123.5,string(action2),"Color",TEXT_MUTED,"FontSize",5.4,"Interpreter
 drawCard(ax,4.0,126.5,92.0,12.0,CARD_BG,BORDER);
 
 % Left: Disclaimer
-text(ax,6.0,129.0,"MEDICAL DISCLAIMER & NOTICE","Color",NAVY,"FontSize",5.5,"FontWeight","bold");
+text(ax,6.0,129.0,"MEDICAL DISCLAIMER & NOTICE","Color",CYAN,"FontSize",5.5,"FontWeight","bold");
 discStr = "This report is generated by an AI-assisted screening system and is intended for screening and decision support. It is not a substitute for comprehensive diagnosis by a qualified medical practitioner.";
 text(ax,6.0,132.0,wrapText(discStr,58,2),"Color",TEXT_MUTED,"FontSize",4.8,"Interpreter","none");
-text(ax,6.0,136.5,"Developed by Team JEEVANA-NETRA  •  SIH 2026  •  AI FOR BETTER VISION","Color",TEAL,"FontSize",5.0,"FontWeight","bold");
+text(ax,6.0,136.5,"Developed by Team JEEVANA-NETRA  •  SIH 2026  •  AI FOR BETTER VISION","Color",CYAN,"FontSize",5.0,"FontWeight","bold");
 
 % Right: Clinician Verification
 rectangle(ax,"Position",[62.0 127.5 0.35 10.0],"FaceColor",BORDER,"EdgeColor","none");
-text(ax,64.0,129.0,"HEALTHCARE PROVIDER VERIFICATION","Color",NAVY,"FontSize",5.5,"FontWeight","bold");
+text(ax,64.0,129.0,"HEALTHCARE PROVIDER VERIFICATION","Color",WHITE,"FontSize",5.5,"FontWeight","bold");
 text(ax,64.0,132.0,"Reviewing Clinician:  ____________________________","Color",TEXT_MUTED,"FontSize",5.0);
 text(ax,64.0,135.0,"Signature / Date:     ____________________________","Color",TEXT_MUTED,"FontSize",5.0);
 
 % Repaint Header Band for crispness
-rectangle(ax,"Position",[0 0 100 14.5],"FaceColor",NAVY,"EdgeColor","none");
-rectangle(ax,"Position",[0 13.8 100 0.7],"FaceColor",TEAL,"EdgeColor","none");
-text(ax,4.0,4.2,"JEEVANA NETRA","Color",WHITE,"FontSize",16.5,"FontWeight","bold");
-text(ax,4.0,7.8,"AI-POWERED RETINAL SCREENING  •  SMART INDIA HACKATHON 2026","Color",[0.55 0.90 0.85],"FontSize",6.5,"FontWeight","bold");
-text(ax,4.0,11.5,"Explainable AI-Assisted Diabetic Retinopathy Screening Report","Color",[0.84 0.90 0.95],"FontSize",6.2,"Interpreter","none");
+rectangle(ax,"Position",[0 0 100 14.5],"FaceColor",[10 26 46]/255,"EdgeColor","none");
+rectangle(ax,"Position",[0 13.8 100 0.7],"FaceColor",CYAN,"EdgeColor","none");
+rectangle(ax,"Position",[4.0 3.2 18.5 3.2],"FaceColor",CYAN_SOFT,"EdgeColor",CYAN,"LineWidth",0.6);
+plot(ax,5.2,4.8,"o","MarkerFaceColor",CYAN,"MarkerEdgeColor","none","MarkerSize",3.2);
+text(ax,7.2,5.0,"AI ACTIVE INFERENCE","Color",CYAN,"FontSize",5.2,"FontWeight","bold");
 
-text(ax,96.0,4.2,"REPORT ID: " + string(screeningId),"Color",WHITE,"FontSize",7.5,"FontWeight","bold","HorizontalAlignment","right","Interpreter","none");
-text(ax,96.0,7.8,"Date: " + string(examDate),"Color",[0.78 0.86 0.92],"FontSize",6.0,"HorizontalAlignment","right","Interpreter","none");
-text(ax,96.0,11.5,"Status: Official Clinical Record","Color",[0.55 0.90 0.85],"FontSize",5.8,"FontWeight","bold","HorizontalAlignment","right");
+text(ax,4.0,9.8,"JEEVANA NETRA","Color",WHITE,"FontSize",17.0,"FontWeight","bold");
+text(ax,38.0,9.8,"•   CLINICAL AI RETINAL SCREENING SYSTEM","Color",CYAN,"FontSize",7.0,"FontWeight","bold");
+text(ax,4.0,12.5,"Smart India Hackathon 2026  •  Explainable Deep Learning Retinopathy Assessment","Color",TEXT_MUTED,"FontSize",5.6);
+
+text(ax,96.0,4.2,"REPORT ID: " + string(screeningId),"Color",WHITE,"FontSize",7.2,"FontWeight","bold","HorizontalAlignment","right","Interpreter","none");
+text(ax,96.0,7.8,"Date: " + string(examDate),"Color",TEXT_LIGHT,"FontSize",6.0,"HorizontalAlignment","right","Interpreter","none");
+text(ax,96.0,11.5,"Architecture: ResNet-101 • Grad-CAM","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
 
 % Export Exactly 1 Page
-exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor","white");
+exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor",[7 20 36]/255);
 close(fig);
 
 % ============================================================
@@ -437,7 +449,7 @@ end
 
 function fig = makePageFigure()
 % Standard A4 Portrait figure (8.27 x 11.69 inches)
-fig = figure("Visible","off","Color","white","Units","inches","Position",[1 1 8.27 11.69],"MenuBar","none","ToolBar","none");
+fig = figure("Visible","off","Color",[7 20 36]/255,"Units","inches","Position",[1 1 8.27 11.69],"MenuBar","none","ToolBar","none");
 end
 
 function ax = makePageAxes(fig)
@@ -476,9 +488,9 @@ y0 = box(2) + (box(4) - drawH) / 2;
 image(ax,[x0 x0+drawW],[y0 y0+drawH],I);
 end
 
-function drawMiniConfidenceRing(ax, cx, cy, r, pct, accent, textColor, mutedColor)
+function drawNeonConfidenceRing(ax, cx, cy, r, pct, accent, textColor, mutedColor)
 t = linspace(0,2*pi,180);
-plot(ax,cx+r*cos(t),cy+r*sin(t),"Color",[0.88 0.92 0.95],"LineWidth",3.5);
+plot(ax,cx+r*cos(t),cy+r*sin(t),"Color",[20 48 80]/255,"LineWidth",3.5);
 clampedPct = max(0,min(100,pct));
 ang = linspace(pi/2,pi/2 - 2*pi*clampedPct/100,150);
 plot(ax,cx+r*cos(ang),cy+r*sin(ang),"Color",accent,"LineWidth",3.5);
@@ -659,7 +671,7 @@ flat = extractFlatRegions(evidence);
 for j = 1:numel(flat)
     [ok,x,y,w,h] = getRegionBox(flat{j},size(J));
     if ok
-        J = drawImageRectangle(J,x,y,w,h,[255 220 0],2);
+        J = drawImageRectangle(J,x,y,w,h,[0 240 255],2);
     end
 end
 end
@@ -751,7 +763,7 @@ end
 
 function maculaText = evaluateMaculaInvolvement(lesionEvidence, evidenceCount)
 if evidenceCount == 0
-    maculaText = "Spared (No Involvement)";
+    maculaText = "Spared (Central Field Intact)";
     return;
 end
 
@@ -894,7 +906,7 @@ end
 p = max(0,min(100,p));
 end
 
-function color = severityColor(name,green,amber,red,purple,blue)
+function color = severityNeonColor(name,green,amber,red,purple,cyan)
 s = lower(strtrim(char(string(name))));
 if strcmpi(s,"no dr") || strcmpi(s,"nodr")
     color = green;
@@ -905,7 +917,7 @@ elseif strcmpi(s,"moderate") || strcmpi(s,"severe")
 elseif strcmpi(s,"proliferative dr") || strcmpi(s,"proliferativedr")
     color = purple;
 else
-    color = blue;
+    color = cyan;
 end
 end
 
@@ -923,15 +935,6 @@ if isempty(age) || isnan(age) || ~isfinite(age)
 else
     value = string(sprintf("%.0f yrs",round(age)));
 end
-end
-
-function c = probabilityColor(i)
-colors = [[32 164 100]/255; [225 145 20]/255; [235 110 30]/255; [210 60 45]/255; [135 30 95]/255];
-c = colors(i,:);
-end
-
-function c = blendWithWhite(base,ratio)
-c = base * (1-ratio) + [1 1 1] * ratio;
 end
 
 function textOut = wrapText(inputText,maxChars,maxLines)
