@@ -194,7 +194,7 @@ BORDER      = [28 62 100] / 255;     % #1C3E64 Tech Structure Border
 BORDER_GLOW = [0 215 200] / 255;     % #00D7C8 Neon Cyan Accent Border
 
 CYAN        = [0 230 220] / 255;     % #00E6DC Electric Neon Cyan Accent
-CYAN_SOFT   = [0 230 220] * 0.18 + CARD_BG * 0.82;
+CYAN_SOFT   = CYAN * 0.18 + CARD_BG * 0.82;
 BLUE_TECH   = [24 144 255] / 255;    % #1890FF High-Tech Blue
 WHITE       = [1 1 1];               % Pure White Primary Text
 TEXT_LIGHT  = [215 232 248] / 255;   % #D7E8F8 Crisp Ice Blue Text
