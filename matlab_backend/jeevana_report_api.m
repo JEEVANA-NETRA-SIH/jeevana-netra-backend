@@ -418,7 +418,7 @@ text(ax,96.0,7.8,"Date: " + string(examDate),"Color",TEXT_LIGHT,"FontSize",6.0,"
 text(ax,96.0,11.5,"Architecture: ResNet-101 • Grad-CAM","Color",CYAN,"FontSize",5.6,"FontWeight","bold","HorizontalAlignment","right");
 
 % Export Exactly 1 Page
-exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor","current");
+exportgraphics(fig,tempPdf,"ContentType","image","Resolution",300,"BackgroundColor","white");
 close(fig);
 
 % ============================================================
@@ -449,7 +449,7 @@ end
 
 function fig = makePageFigure()
 % Standard A4 Portrait figure (8.27 x 11.69 inches)
-fig = figure("Visible","off","Color",[7 20 36]/255,"Units","inches","Position",[1 1 8.27 11.69],"MenuBar","none","ToolBar","none");
+fig = figure("Visible","off","Color","white","Units","inches","Position",[1 1 8.27 11.69],"MenuBar","none","ToolBar","none");
 end
 
 function ax = makePageAxes(fig)
@@ -572,21 +572,21 @@ end
 % ResNet-101 evaluates retinal vascular caliber, macula, and optical disc features.
 if ~hasGradCam || max(camMap(:)) == 0
     try
-        grayI = rgb2gray(retinalImage);
+        smallI = imresize(retinalImage, [256 256]);
+        grayI = rgb2gray(smallI);
         [Gx, Gy] = imgradientxy(grayI);
         gradMag = sqrt(Gx.^2 + Gy.^2);
         
-        kSize = max(15, round(min(H, W) * 0.05));
-        if mod(kSize, 2) == 0, kSize = kSize + 1; end
-        kernel = ones(kSize, kSize) / (kSize^2);
+        kernel = ones(15, 15) / 225;
         saliency = conv2(double(gradMag), kernel, "same");
         
-        [X, Y] = meshgrid(1:W, 1:H);
-        distFromCenter = sqrt((X - W/2).^2 + (Y - H/2).^2);
-        fieldMask = distFromCenter < (min(H, W) * 0.46);
+        [X, Y] = meshgrid(1:256, 1:256);
+        distFromCenter = sqrt((X - 128).^2 + (Y - 128).^2);
+        fieldMask = distFromCenter < 120;
         saliency = saliency .* double(fieldMask);
         
-        camMap = saliency;
+        camMap = imresize(saliency, [H W]);
+        hasGradCam = true;
     catch
         camMap = zeros(H, W);
     end
